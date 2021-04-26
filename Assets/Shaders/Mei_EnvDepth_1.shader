@@ -1,4 +1,4 @@
-Shader "Unlit/Mei_HumanDepth"
+Shader "Unlit/Mei_EnvDepth1"
 {
     Properties
     {
@@ -106,34 +106,41 @@ Shader "Unlit/Mei_HumanDepth"
                 float envDistance = UNITY_SAMPLE_TEX2D(_MainTex, i.uv).r;
                 float humanDistance = UNITY_SAMPLE_TEX2D(_HumanTex, i.uv).r;
 
+                fixed2 center = fixed2(0.5, 0.5);
+                float2x2 fMatrix = float2x2( -1.0f, 0.0f, 0.0f, -1.0f);
+
+                v2f tmp;
+                tmp.uv = mul(float3(i.uv, 1.0f), _InverseMatrix).xy;
+                fixed2 uv_OverTex = mul(fMatrix, tmp.uv - center) + center;
+                fixed3 rgb = UNITY_SAMPLE_TEX2D(_CameraTex, uv_OverTex).rgb;
+
+                // fixed3 rgb_reverse = fixed3(1.0 - rgb);
+
+                fixed3 rgb_reverse = rgb * 1.0;
+                //saturation饱和度：首先根据公式计算同等亮度情况下饱和度最低的值：
+                fixed gray = 0.2125 * rgb.r + 0.7154 * rgb.g + 0.0721 * rgb.b;
+                // fixed3 grayColor = fixed3(gray, gray, gray);
+                //根据Saturation在饱和度最低的图像和原图之间差值
+                rgb_reverse +=  (rgb_reverse - gray) * 2.;
+                // rgb_reverse = lerp(grayColor, rgb_reverse, 10.);
+                rgb_reverse = fixed3(1.0 - rgb);
+
                 if (humanDistance > 0.0f)
                 {
-                    return distance2color(i, humanDistance);
+                    return fixed4(rgb_reverse, 1.0);
+                    // return distance2color(i, humanDistance);
 				}
                 else
                 {
-                    fixed2 center = fixed2(0.5, 0.5);
-                    float2x2 fMatrix = float2x2( -1.0f, 0.0f, 0.0f, -1.0f);
-
-                    v2f tmp;
-                    tmp.uv = mul(float3(i.uv, 1.0f), _InverseMatrix).xy;
-                    fixed2 uv_OverTex = mul(fMatrix, tmp.uv - center) + center;
-                    return UNITY_SAMPLE_TEX2D(_CameraTex, uv_OverTex);
-
-					// if (envDistance > _DisplayDistance)
-					// {
-					// 	fixed2 center = fixed2(0.5, 0.5);
-					// 	float2x2 fMatrix = float2x2( -1.0f, 0.0f, 0.0f, -1.0f);
-
-					// 	v2f tmp;
-					// 	tmp.uv = mul(float3(i.uv, 1.0f), _InverseMatrix).xy;
-					// 	fixed2 uv_OverTex = mul(fMatrix, tmp.uv - center) + center;
-					// 	return UNITY_SAMPLE_TEX2D(_CameraTex, uv_OverTex);
-					// }
-					// else
-					// {
-                        // return distance2color(i, envDistance);
-					// }
+					if (envDistance > _DisplayDistance)
+					{
+                        return fixed4(rgb, 1.0);
+					}
+					else
+					{
+                        return fixed4(rgb_reverse, 1.0);
+						// return distance2color(i, envDistance);
+					}
 				}
             }
 
