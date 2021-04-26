@@ -71,15 +71,15 @@ namespace UnityEngine.XR.ARFoundation.Samples
 
             if (descriptor == null || descriptor.environmentDepthImageSupported == Supported.Unsupported)
             { 
-                displayTexture = envDepth;
-                m_Material = m_EnvDepthMaterial;
-                m_BaseInfoText.text = "Display: Enviroment Depth";
-			}
-            else
-            {
                 displayTexture = humanDepth;
                 m_Material = m_HumanDepthMaterial;
                 m_BaseInfoText.text = "Display: Human Depth";
+			}
+            else
+            {
+                displayTexture = envDepth;
+                m_Material = m_EnvDepthMaterial;
+                m_BaseInfoText.text = "Display: Enviroment Depth";
 			}
 
             m_DistanceInfoText.text = $"Display Distance: {m_DisplayDistance.ToString("F2")} meter";
